@@ -7,9 +7,10 @@ close all;
     This section should have everything you'd normally need to edit.
 %}
 
-folderPath = "/Users/Mingda/Desktop/analysis files/SampleData/vrScaleData";
+folderPath = "/Users/Mingda/Library/Mobile Documents/com~apple~CloudDocs/Documents/UCLA/Research/Github/GithubTraining/Experimental_Data/";
+fileName = "testData.csv";
 timeDelay = 150;
-plotTitle = "VR 2D Face Scaling RT";
+plotTitle = "VR Horizontal Eccentricity Experiment";
 plotXLabel = "Eccentricity (°)";
 plotYLabel = "reaction time (ms)";
 plotYLimits = [400,800];
@@ -18,7 +19,7 @@ plotYLimits = [400,800];
 zScore = 1.96; % 1.96 for 95%, 2.326 for 98%, 2.576 for 99%
 pValThreshold = 0.05; % adjust accordingly if changing z-score
 leftIVRows = 1:3; % left best fit line calculated for these IV rows in stats/data{i,4}
-rightIVRows = 3:4; % right best fit line calculated for these IV rows in  stats/data{i,4}
+rightIVRows = 3:5; % right best fit line calculated for these IV rows in  stats/data{i,4}
 
 %% Data pre-processing
 %{
@@ -30,6 +31,12 @@ rightIVRows = 3:4; % right best fit line calculated for these IV rows in  stats/
 
 % Imports all files in the folder, folderPath, and adds to "data"
 fileList = dir(fullfile(folderPath, "*.csv"));
+
+% Filter file list if fileName is specified
+if ~isempty(fileName)
+    fileList = fileList(strcmp({fileList.name}, fileName));
+end
+
 data = cell(length(fileList), 3);
 for i = 1:length(fileList)
     dataImport = readtable(fullfile(folderPath, fileList(i).name));
@@ -62,7 +69,8 @@ for i = 1:height(data)
     currentData = data{i, 4};
 
     % separates the table into arrays
-    independentVar = currentData.Distance;
+    % THIS SHOULD CHANGE IF IV TABLE COLUMN NAME IS DIFFERENT
+    independentVar = currentData.Eccentricity;
     uniqueIVs = unique(independentVar);
     dependentVar = currentData.ReactionTime - currentData.ObjShowTime;
 
@@ -76,7 +84,8 @@ for i = 1:height(data)
     for j = 1:numel(uniqueIVs)
         % sets current IV and gets all of the DVs for that IV
         iv = uniqueIVs(j);
-        rtForCondition = dependentVar(strcmpi(independentVar, iv));
+        % THIS SHOULD CHANGE WITH IV IF IT IS STRING IT NEED STRCMPI
+        rtForCondition = dependentVar(independentVar == iv);
         % this variable is for removing outliers from the 4th column of
         % "data"
         conditionIndices = find(strcmpi(independentVar, iv));
@@ -89,7 +98,7 @@ for i = 1:height(data)
         outlierIndices = conditionIndices(outlierIndex);
 
         % adds cleaned data and summary statistics to the table
-        dataSeparatedByIV(j,1) = iv;
+        dataSeparatedByIV(j,1) = {iv};
         dataSeparatedByIV{j,2} = {rtForCondition};
         dataSeparatedByIV{j,3} = mean(rtForCondition);
         dataSeparatedByIV{j,4} = std(rtForCondition);
@@ -333,7 +342,7 @@ end
 %}
 
 % delete the right bracket below to comment out everything
-%{}
+%{
 
 % saves data to data.mat file in the current directory
 %save("data.mat", "data");
@@ -350,8 +359,3 @@ clear currentColor fitLineLeft fitLineLeftCoefs fitLineRight ...
     yPredictedRight;
 % anova / stats variables
 %}
-
-
-
-
-
